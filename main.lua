@@ -11,7 +11,7 @@ if LocalPlayer.Character:FindFirstChild("OwoChan Character") then LocalPlayer.Ch
 local TweenService = game:GetService("TweenService")
 
 -- Library Core Loadstring
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/AnLiterallyStupidPerson/Ocerium/main/Ocerium.lua?t="..tostring(tick())))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/centerepic/SporeHub/main/Ocerium.lua?t="..tostring(tick())))()
 
 -- Creating Gui
 local MainWindow = Library.Main("Spore Hub","RightShift") -- Name, Keybind
