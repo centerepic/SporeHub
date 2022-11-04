@@ -6,6 +6,10 @@ local findrareore = loadstring(game:HttpGet('https://raw.githubusercontent.com/c
 local findpurpletree= loadstring(game:HttpGet('https://raw.githubusercontent.com/centerepic/SporeHub/main/purpletreefinder.lua'))
 local hopserver= loadstring(game:HttpGet('https://raw.githubusercontent.com/centerepic/SporeHub/main/serverhop.lua'))
 
+isLGPremium = true 
+local function isLGPremium()
+	return true
+end
 
 pcall(function()
 	makefolder('SporeHub')
