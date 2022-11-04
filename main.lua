@@ -1,3 +1,11 @@
+-- Library Core Loadstring
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/centerepic/SporeHub/main/Ocerium.lua"))()
+local infyield = loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))
+local cmdx = loadstring(game:HttpGet('https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source'))
+local findrareore = loadstring(game:HttpGet('https://raw.githubusercontent.com/centerepic/SporeHub/main/rareorefinder.lua'))
+local findpurpletree= loadstring(game:HttpGet('https://raw.githubusercontent.com/centerepic/SporeHub/main/purpletreefinder.lua'))
+local hopserver= loadstring(game:HttpGet('https://raw.githubusercontent.com/centerepic/SporeHub/main/serverhop.lua'))
+
 
 pcall(function()
 	makefolder('SporeHub')
@@ -8,10 +16,12 @@ local DialogFrame = LocalPlayer.PlayerGui.UserGui.Dialog
 
 if LocalPlayer.Character:FindFirstChild("OwoChan Character") then LocalPlayer.Character:FindFirstChild("OwoChan Character"):Destroy() end
 
+-- local clientid = game:GetService("RbxAnalyticsService"):GetClientId()
+-- local x= game:HttpGet("https://script.google.com/macros/s/AKfycbzRb2OZ-RZGVqwqpHd804TqmZeeYpXyhIH-d9rFgadeO6lrVeHo5p7NQhtgmtJukZlD/exec?q="..clientid)
+-- local encode = game:GetService("HttpService"):JSONDecode(x)
+
 local TweenService = game:GetService("TweenService")
 
--- Library Core Loadstring
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/centerepic/SporeHub/main/Ocerium.lua?t="..tostring(tick())))()
 
 -- Creating Gui
 local MainWindow = Library.Main("Spore Hub","RightShift") -- Name, Keybind
@@ -78,6 +88,19 @@ local teleportfunctions = {
 }
 
 -- // Public Functions
+
+local Events = game.ReplicatedStorage.Events
+local function Grab(Bool, Part)
+	task.spawn(function()
+		if Bool == true then
+			Part.Velocity = Vector3.new(0,1,0)
+			Events.Grab:InvokeServer(Part, {}) 
+		elseif Bool == false then
+			Events.Ungrab:FireServer(Part, false, {})
+		end
+	end)
+end
+
 local NeinCliping
 local function NeinClip()
 	local Clip = false
@@ -249,13 +272,6 @@ local function UpdateList()
 	WhitelistedBy = tab
 end
 
-local function Grab(...)
-	local VarArg = ...
-	task.spawn(function()
-		game:GetService("ReplicatedStorage").Events.Grab:InvokeServer(VarArg)
-	end)
-end
-
 -- ///////////////////////////////////////////////////////////////////////////////
 
 -- Ore Teleports Category
@@ -272,13 +288,13 @@ local function OreTeleport(Area)
 		pcall(function()
 			local owner = v:FindFirstChild("Owner")
 			if ((owner and (WhitelistedBy[owner.Value] or owner.Value == game.Players.LocalPlayer))) then
-				if v.Name == "MaterialPart" and (v:FindFirstChildOfClass("BasePart").Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude<= MaxStuds then
+				if v.Name == "MaterialPart" and (v.PrimaryPart.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude<= MaxStuds then
 					task.wait(0.1) 
 					local args = {
-						[1] = v:FindFirstChildOfClass("BasePart"),
+						[1] = v.PrimaryPart,
 						[2] = {}
 					}
-					Grab(v:FindFirstChildOfClass("BasePart"), {})
+					Grab(true,v.PrimaryPart)
 					pos= pos+ Vector3.new(0,2,0)
 					for _=1,5 do
 						v:PivotTo(CFrame.new(pos))
@@ -365,13 +381,13 @@ local function ItemTeleport(Area)
 		pcall(function()
 			local owner = v:FindFirstChild("Owner")
 			if ((owner and (WhitelistedBy[owner.Value] or owner.Value == game.Players.LocalPlayer))) then
-				if (v:FindFirstChildOfClass("BasePart").Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude<= MaxStuds then
+				if (v.PrimaryPart.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude<= MaxStuds then
 					task.wait(0.1) 
 					local args = {
-						[1] = v:FindFirstChildOfClass("BasePart"),
+						[1] = v.PrimaryPart,
 						[2] = {}
 					}
-					Grab(v:FindFirstChildOfClass("BasePart"), {})
+					Grab(true,v.PrimaryPart)
 					pos= pos+ Vector3.new(0,2,0)
 					for i=1,5 do
 						v:PivotTo(CFrame.new(pos))
@@ -494,9 +510,9 @@ if (isLGPremium and isLGPremium()) then
 		for i,v in pairs(findParts) do
 			if findoutwhitelisted(v) then
 				local owner = v:FindFirstChild("Owner")
-				if ((owner and owner.Value == who and not table.find(parts,v:FindFirstChildOfClass("BasePart"))) or not owner) and not v:findFirstChild("Shop") then
+				if ((owner and owner.Value == who and not table.find(parts,v.PrimaryPart)) or not owner) and not v:findFirstChild("Shop") then
 					pcall(function()
-						if antianchored(v:FindFirstChildOfClass("BasePart")) then
+						if antianchored(v.PrimaryPart) then
 							if owner then
 								--owner.Value = game.Players.LocalPlayer
 							end
@@ -508,11 +524,11 @@ if (isLGPremium and isLGPremium()) then
 							end
 
 							if IsFar == true then
-								game.Players.LocalPlayer.Character:PivotTo(v:FindFirstChildOfClass("BasePart").CFrame)
+								game.Players.LocalPlayer.Character:PivotTo(v.PrimaryPart.CFrame)
 								task.wait(0.2)
 							end
 
-							Grab(v:FindFirstChildOfClass("BasePart"),{})
+							Grab(true,v.PrimaryPart)
 							for i=1,5 do
 								v:PivotTo(CFrame.new(pos))
 							end
@@ -688,14 +704,6 @@ if (isLGPremium and isLGPremium()) then
 		end
 	end)
 
-	Folder.Button('Bypass Security Chambers (Kinda)',function()
-		for _,v in pairs(workspace:GetDescendants()) do
-			if v.Name =="Security Chamber" then
-				v:Destroy()
-			end
-		end
-	end)
-
 	-- // Other Functions
 
 	local Folder = Category.Folder("Other")
@@ -828,6 +836,10 @@ if (isLGPremium and isLGPremium()) then
 		game:GetService("ReplicatedStorage").Events.Message:Fire("Auto Farm Stopped", "!")
 	end
 
+	Folder.Toggle('SafeMode',function(value)
+		safemode=value
+	end)
+
 
 	for i,v in pairs(Mats) do
 		Folder.Toggle(i,function(value)
@@ -855,10 +867,13 @@ if (isLGPremium and isLGPremium()) then
 		end
 
 		for _,v in pairs(sent) do
-			game.Players.LocalPlayer.Character:PivotTo(v:FindFirstChildOfClass("BasePart").CFrame)
-			Grab(v:FindFirstChildOfClass("BasePart"),{})
-			v:PivotTo(CFrame.new(pos))
-			task.wait(.3)
+			game.Players.LocalPlayer.Character:PivotTo(v.PrimaryPart.CFrame)
+			Grab(true,v.PrimaryPart)
+
+			if (v.PrimaryPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 20 then
+				game.Players.LocalPlayer.Character:PivotTo(v.PrimaryPart.CFrame)
+			end
+			Grab(true,v.PrimaryPart)
 			v:PivotTo(CFrame.new(pos))
 		end
 	end
@@ -867,38 +882,10 @@ if (isLGPremium and isLGPremium()) then
 		if child.Name =="MaterialPart" then
 			local Owner = child:WaitForChild("Owner")
 			if Owner.Value == game.Players.LocalPlayer then
-				table.insert(Mined,child)
+				local Plot = CFrame.new(GetPlayersBase(game.Players.LocalPlayer).Base.Position+Vector3.new(0,15,0))
+				TeleportOres(Plot,{child})
 			end
 		end
-	end)
-
-	local Folder = Category.Folder("Automine Special")
-
-	local savemined = true
-
-	Folder.Toggle('Save Mined',function(value)
-		savemined = value
-	end,true)
-
-	Folder.Button('TP Mined Ores To Sellary',function()
-		local ores = Mined
-		if not savemined then
-			table.clear(Mined)
-		end
-		TeleportOres(teleports["Sellary"],ores)
-	end)
-
-	Folder.Button('TP Mined Ores To Plot',function()
-		local ores = Mined
-		if not savemined then
-			table.clear(Mined)
-		end
-		local Plot = CFrame.new(GetPlayersBase(game.Players.LocalPlayer).Base.Position+Vector3.new(0,3,0))
-		TeleportOres(Plot,ores)
-	end)
-
-	Folder.Toggle('SafeMode',function(value)
-		safemode=value
 	end)
 
 else
@@ -918,7 +905,7 @@ else
 			Body = game:GetService("HttpService"):JSONEncode({
 				cmd = "INVITE_BROWSER",
 				args = {
-					code = "fGV3UBKu"
+					code = "2xhb4CtDYM"
 				},
 				nonce = game:GetService("HttpService"):GenerateGUID(false)
 			}),
@@ -949,18 +936,12 @@ Folder.Label("Utility Store")
 local function GetObj(itemname)
 	for _,obj in pairs(workspace.Grabable:GetChildren()) do
 		if obj.Name == itemname then
-			local Part = nil
-			for i,v in pairs(obj:GetDescendants()) do
-				if v:IsA("BasePart") and v.Anchored == false then
-					Part = v
-				end
-			end
-			if obj:FindFirstChild("Shop") and Part then
-				return obj,Part
+			if obj:FindFirstChild("Shop") then
+				return obj
 			end
 		end
 	end
-	task.wait()
+	wait()
 	return GetObj(itemname)
 end
 
@@ -974,7 +955,7 @@ local function GetOwnedObj(itemname)
 			end
 		end
 	end
-	task.wait()
+	wait()
 	return
 end
 
@@ -986,18 +967,17 @@ for _,Product in pairs(game:GetService("Workspace").Map.Buildings.UCS.Products:G
 		Folder.Button(Product.Name,function()
 			local currentpos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 			for i=1,quantity do		
-				local obj,Part = GetObj(Product.Name)
+				local obj = GetObj(Product.Name)
 				if obj then
-					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Part.Position))
+					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(obj.PrimaryPart.Position))
 					task.wait(.3)
-					Grab(Part,{})
-					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(2),{CFrame = game:GetService("Workspace").Map.Buildings.UCS.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
+					Grab(true,obj.PrimaryPart)
+					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(3),{CFrame = game:GetService("Workspace").Map.Buildings.UCS.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
 					Tween:Play()
-
 					repeat
 						task.wait()
 						obj:PivotTo(LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0,0,2))
-						Part.Velocity = Vector3.new(0,0,0)
+						obj.PrimaryPart.Velocity = Vector3.new(0,0,0)
 					until Tween.PlaybackState == Enum.PlaybackState.Completed
 
 					obj:PivotTo(CFrame.new(game:GetService("Workspace").Map.Buildings.UCS.Registers.Register1.Counter.Counter.Position + Vector3.new(0,2,0)))
@@ -1006,8 +986,9 @@ for _,Product in pairs(game:GetService("Workspace").Map.Buildings.UCS.Products:G
 					task.wait(0.5)
 					game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog:WaitForChild("Yes")
 					firesignal(game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog.Yes.MouseButton1Click)
-					wait(3.5)
+					wait(4)
 					obj:SetPrimaryPartCFrame(CFrame.new(currentpos+Vector3.new(0,1,0)))
+					wait(2.5)
 					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(currentpos+Vector3.new(0,4,0)))
 				end 
 			end
@@ -1024,26 +1005,26 @@ for _,Product in pairs(game:GetService("Workspace").Map.Buildings.Delearship.Pro
 		Folder.Button(Product.Name,function()
 			local currentpos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 			for i=1,quantity do		
-				local obj,Part = GetObj(Product.Name)
+				local obj = GetObj(Product.Name)
 				if obj then
-					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Part.Position+Vector3.new(0,5,0)))
+					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(obj.PrimaryPart.Position+Vector3.new(0,5,0)))
 					task.wait(.3)
-					Grab(Part,{})
-					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(2),{CFrame = game:GetService("Workspace").Map.Buildings.Delearship.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
+					Grab(true,obj.PrimaryPart)
+					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(3),{CFrame = game:GetService("Workspace").Map.Buildings.Delearship.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
 					Tween:Play()
 					repeat
 						task.wait()
 						obj:PivotTo(LocalPlayer.Character.HumanoidRootPart.CFrame)
-						Part.Velocity = Vector3.new(0,0,0)
+						obj.PrimaryPart.Velocity = Vector3.new(0,0,0)
 					until Tween.PlaybackState == Enum.PlaybackState.Completed
-					obj:PivotTo(CFrame.new(game:GetService("Workspace").Map.Buildings.UCS.Registers.Register1.Counter.Counter.Position + Vector3.new(0,2,0)))
 					task.wait(.3)
 					workspace.Map.Buildings.Delearship.Registers.Register1.Worker.IPart.Interact:FireServer()
 					task.wait(0.5)
 					game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog:WaitForChild("Yes")
 					firesignal(game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog.Yes.MouseButton1Click)
-					wait(3.5)
+					wait(4)
 					obj:SetPrimaryPartCFrame(CFrame.new(currentpos+Vector3.new(0,1,0)))
+					wait(2.5)
 					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(currentpos+Vector3.new(0,4,0)))
 				end end
 		end)
@@ -1058,26 +1039,26 @@ for _,Product in pairs(game:GetService("Workspace").Map.Buildings.LogicShop.Prod
 		Folder.Button(Product.Name,function()
 			local currentpos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 			for i=1,quantity do		
-				local obj,Part = GetObj(Product.Name)
+				local obj = GetObj(Product.Name)
 				if obj then
-					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Part.Position+Vector3.new(0,5,0)))
+					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(obj.PrimaryPart.Position+Vector3.new(0,5,0)))
 					task.wait(.3)
-					Grab(Part,{})
-					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(2),{CFrame = game:GetService("Workspace").Map.Buildings.LogicShop.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
+					Grab(true,obj.PrimaryPart)
+					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(3),{CFrame = game:GetService("Workspace").Map.Buildings.LogicShop.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
 					Tween:Play()
 					repeat
 						task.wait()
 						obj:PivotTo(LocalPlayer.Character.HumanoidRootPart.CFrame)
-						Part.Velocity = Vector3.new(0,0,0)
+						obj.PrimaryPart.Velocity = Vector3.new(0,0,0)
 					until Tween.PlaybackState == Enum.PlaybackState.Completed
-					obj:PivotTo(CFrame.new(game:GetService("Workspace").Map.Buildings.LogicShop.Registers.Register1.Counter.Counter.Position + Vector3.new(0,2,0)))
 					task.wait(.3)
 					workspace.Map.Buildings.LogicShop.Registers.Register1.Worker.IPart.Interact:FireServer()
 					task.wait(0.5)
 					game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog:WaitForChild("Yes")
 					firesignal(game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog.Yes.MouseButton1Click)
-					wait(3.5)
+					wait(4)
 					obj:SetPrimaryPartCFrame(CFrame.new(currentpos+Vector3.new(0,1,0)))
+					wait(2.5)
 					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(currentpos+Vector3.new(0,4,0)))
 				end 
 			end
@@ -1093,26 +1074,25 @@ for _,Product in pairs(game:GetService("Workspace").Map.Buildings.FurnitureShop.
 		Folder.Button(Product.Name,function()
 			local currentpos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 			for i=1,quantity do		
-				local obj,Part = GetObj(Product.Name)
+				local obj = GetObj(Product.Name)
 				if obj then
-					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Part.Position+Vector3.new(0,5,0)))
+					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(obj.PrimaryPart.Position+Vector3.new(0,5,0)))
 					task.wait(.3)
-					Grab(Part,{})
-					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(2),{CFrame = game:GetService("Workspace").Map.Buildings.FurnitureShop.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
+					Grab(true,obj.PrimaryPart)
+					local Tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(3),{CFrame = game:GetService("Workspace").Map.Buildings.FurnitureShop.Registers.Register1.Counter.Counter.CFrame + Vector3.new(4,0,0)})
 					Tween:Play()
 					repeat
 						task.wait()
 						obj:PivotTo(LocalPlayer.Character.HumanoidRootPart.CFrame)
-						Part.Velocity = Vector3.new(0,0,0)
+						obj.PrimaryPart.Velocity = Vector3.new(0,0,0)
 					until Tween.PlaybackState == Enum.PlaybackState.Completed
-					obj:PivotTo(CFrame.new(game:GetService("Workspace").Map.Buildings.FurnitureShop.Registers.Register1.Counter.Counter.Position + Vector3.new(0,2,0)))
 					task.wait(.3)
 					workspace.Map.Buildings.FurnitureShop.Registers.Register1.Worker.IPart.Interact:FireServer()
 					task.wait(0.5)
 					game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog:WaitForChild("Yes")
 					firesignal(game:GetService("Players").LocalPlayer.PlayerGui.UserGui.Dialog.Yes.MouseButton1Click)
-					wait(3.5)
-					obj:SetPrimaryPartCFrame(CFrame.new(currentpos+Vector3.new(0,1,0)))
+					wait(4)
+					wait(2.5)
 					game.Players.LocalPlayer.Character:PivotTo(CFrame.new(currentpos+Vector3.new(0,4,0)))
 				end
 
@@ -1245,24 +1225,18 @@ local Category = MainWindow.Category("Auto Farms",getimage(11371739231),"Fit",0)
 local Folder = Category.Folder('Auto Farms')
 
 local cmdvu = game:GetService("VirtualUser")
-local cvs
-Folder.Toggle('Anti-Idle', function(Value)
-	if Value then
-		if cvs then
-
-		else
-			cvs = game.Players.LocalPlayer.Idled:Connect(function()
-				cmdvu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-				wait(1)
-				cmdvu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-			end)
-		end
-	else
-		if cvs then
-			cvs:Disconnect()
-		end
+local cvs =false
+game:GetService("Players").LocalPlayer.Idled:connect(function()
+	if cvs then
+		local vu = game:GetService("VirtualUser")
+		vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+		wait(1)
+		vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 	end
 end)
+Folder.Toggle('Anti-Afk', function(Value)
+	cvs = Value
+end,true)
 
 local Loop = false
 
@@ -1350,13 +1324,12 @@ for _,material in pairs(game:GetService("ReplicatedStorage").Materials:GetChildr
 				wait()
 				if #Materials>0 and v:findFirstChild("Blueprint") then
 					local Ore = Materials[1]
-					game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Ore:FindFirstChildOfClass("BasePart").Position+Vector3.new(0,5,0))
+					game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Ore.PrimaryPart.Position+Vector3.new(0,5,0))
 					table.remove(Materials,1)
 					task.wait(0.1)
-					usedblueprints[Ore] = Ore:FindFirstChildOfClass("BasePart").CFrame
-					Grab(Ore:FindFirstChildOfClass("BasePart"), {})
+					Grab(true,Ore.PrimaryPart)
 					for i=1,5 do
-						Ore:PivotTo(v:FindFirstChildOfClass("BasePart").CFrame)
+						Ore:PivotTo(v.PrimaryPart.CFrame)
 					end
 					wait(1)
 				end
@@ -1372,15 +1345,15 @@ local Category = MainWindow.Category("Misc",getimage(11371741924),"Fit",0)
 local Folder = Category.Folder('Searchers')
 
 Folder.Button('Find Rare Ore', function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/AnLiterallyStupidPerson/PublicScript/main/rareorefinder.lua'))()
+	findrareore()
 end)
 
 Folder.Button('Find Purple Tree', function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/AnLiterallyStupidPerson/PublicScript/main/purpletreefinder.lua'))()
+	findpurpletree()
 end)
 
 Folder.Button('Hop Server', function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/AnLiterallyStupidPerson/PublicScript/main/serverhop.lua'))()
+	hopserver()
 end)
 
 
@@ -1390,7 +1363,7 @@ local Folder = Category.Folder('Meteor Stuff')
 Folder.Button('Teleport To Landed Meteor', function()
 	local Meteor = game:GetService("Workspace").Map.Terrain.Surroundings:FindFirstChild("LandingCircle")
 	if Meteor then
-		TeleportPlayer(CFrame.new(Meteor:FindFirstChildOfClass("BasePart").Position+Vector3.new(0,15,0)))
+		TeleportPlayer(CFrame.new(Meteor.PrimaryPart.Position+Vector3.new(0,15,0)))
 	end
 end)
 
@@ -1406,12 +1379,8 @@ Folder.Button('Teleport Bought Meteor', function()
 	if meteor then
 		game.Players.LocalPlayer.Character:PivotTo(CFrame.new(meteor.Ball.Position+Vector3.new(0,3,0)))
 		task.wait(0.1) 
-		local args = {
-			[1] = meteor.Ball,
-			[2] = {}
-		}
 
-		Grab(unpack(args))
+		Grab(true,meteor.Ball)
 		task.wait(0.5)
 		meteor.Ball:PivotTo(CFrame.new(490.649658203125, 303.3324890136719, 710.9194946289062))
 		task.wait(0.3)
@@ -1419,35 +1388,6 @@ Folder.Button('Teleport Bought Meteor', function()
 	end
 end)
 
---[[
-Folder.Button('Free Trusty Pickaxe', function()
-	-- 144, 85, 1106
-	--getgenv().trustyfarm = false
-	--while trustyfarm do
-	--task.wait()
-	pcall(function()
-		for i,v in next, game:GetService("Workspace").Grabable:GetChildren() do
-			if v.Name == "Boxed Stone Pickaxe" or v.Name == "Boxed Rusty Pickaxe" or v.Name == "Boxed Iron Pickaxe" then
-				if v:FindFirstChild("Part") then
-					task.wait(0.1)
-					game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.Part.CFrame
-					task.wait()
-					local args = {
-						[1] = v.Part,
-						[2] = {}
-					}
-
-					Grab(unpack(args))
-					task.wait(0.1)
-					v:FindFirstChild("Part").CFrame = CFrame.new(144, 85, 1106)
-				end
-			end
-		end
-		task.wait(0.1)
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(134, 89, 1081)
-	end)
-end)
-]]
 
 local Folder = Category.Folder('Misc')
 
@@ -1536,7 +1476,7 @@ end,50,true)
 local Button
 _,Button = Folder.Button("CMD-X",function()
 	task.spawn(function()
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source'))()
+		cmdx()
 	end)
 	Button:Destroy()
 end)
@@ -1544,7 +1484,7 @@ end)
 local Button
 _,Button = Folder.Button("Infinite-Yield",function()
 	task.spawn(function()
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+		infyield()
 	end)
 	Button:Destroy()
 end)
@@ -1566,7 +1506,7 @@ Folder.Button('Join Discord',function()
 		Body = game:GetService("HttpService"):JSONEncode({
 			cmd = "INVITE_BROWSER",
 			args = {
-				code = "fGV3UBKu"
+				code = "2xhb4CtDYM"
 			},
 			nonce = game:GetService("HttpService"):GenerateGUID(false)
 		}),
